@@ -8,7 +8,7 @@ MYOblue_GUI - is powerful and easy to use, free, open-source, cross-platform Pyt
 
 Supported operating systems: **Windows**, **Linux**, **macOS**.
 
-## 2 Functional
+## 2 EMG Analysis Features
 - in-depth EMG signal analysis.
 - real-time display of **raw**, **rectified**, **smoothed**, and **RMS** signals from up to eight MYOblue sensors.
 - real-time **FFT** analysys of EMG signals.
