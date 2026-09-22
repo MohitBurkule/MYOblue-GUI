@@ -30,7 +30,7 @@ import subprocess
 
 print(">>> MYOblue_GUI is launching. Please wait...")
 
-required = {'pyserial', 'pyqtgraph', 'PyQt5', 'numpy', 'scipy'}
+required = {'pyserial', 'pyqtgraph', 'PyQt5', 'numpy', 'scipy', 'bleak'}
 
 installed = {dist.metadata['Name'].lower() for dist in metadata.distributions()}
 
@@ -68,6 +68,7 @@ from datetime import datetime
 import struct
 from configparser import ConfigParser
 from PyQt5.QtGui import QPen, QColor
+import myoblue_ble
 
 # Main window
 class GUI(QtWidgets.QMainWindow):
@@ -1484,19 +1485,28 @@ class SerialMonitor:
         self.baudRate = 1000000
         self.playFile = 0
         self.delay = delay      
-        self.ports = [p[0] for p in serial.tools.list_ports.comports(include_links=False) ]
+        self.updatePorts()
         self.COM = ''
         self.ser = serial.Serial()
         if len(self.ports) > 0:
             self.COM = self.ports[0]
         
     def updatePorts(self):
-        self.ports = [p[0] for p in serial.tools.list_ports.comports(include_links=False) ]
+        # Real dongle first, then direct Bluetooth, then any other serial ports
+        found = serial.tools.list_ports.comports(include_links=False)
+        dongles = [p.device for p in found if p.vid == 0x1915]
+        others = [p.device for p in found if p.vid != 0x1915]
+        ble = [myoblue_ble.PORT_NAME] if myoblue_ble.AVAILABLE else []
+        self.ports = dongles + ble + others
     
     def serialConnect(self):
         self.updatePorts()
         if not self.connect:
-            if self.COM != '':
+            if self.COM == myoblue_ble.PORT_NAME:
+                self.ser = myoblue_ble.BleSerial()
+                self.ser.open()
+                self.connect = True
+            elif self.COM != '':
                 try:
                     self.ser = serial.Serial(
                         self.COM, 
