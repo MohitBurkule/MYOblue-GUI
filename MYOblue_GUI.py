@@ -36,6 +36,16 @@ installed = {dist.metadata['Name'].lower() for dist in metadata.distributions()}
 
 missing = {pkg for pkg in required if pkg.lower() not in installed}
 
+# System Pythons that forbid pip installs (Arch, Debian 12+, Homebrew): set up a
+# virtual environment next to this script and restart inside it.
+if missing and sys.prefix == sys.base_prefix:
+    venv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv")
+    venv_python = os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "python")
+    if not os.path.exists(venv_python):
+        print(">>> Creating a virtual environment in", venv_dir)
+        subprocess.run([sys.executable, "-m", "venv", venv_dir], check=True)
+    os.execv(venv_python, [venv_python, os.path.abspath(__file__)] + sys.argv[1:])
+
 if missing:
     print(">>> Installing missing libraries:", missing)
 
